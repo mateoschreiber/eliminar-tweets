@@ -8,7 +8,7 @@ A free, local, dependency-free JavaScript DevTools Snippet for reviewing and del
 
 ## What it does
 
-On your X **Posts** or **Replies** timeline, the snippet examines posts authored by the selected account. With its default threshold of 20, it preserves posts with **20 or more** Likes and marks posts with **0–19** Likes as deletion candidates. In dry-run mode it only logs those decisions. In live mode, it deletes candidates one at a time through the X UI.
+On your X **Posts** or **Replies** timeline, the snippet examines posts authored by the selected account from newest to oldest. With its default threshold of 20, it preserves posts with **20 or more** Likes and marks posts with **0–19** Likes as deletion candidates. By default it processes only the **20 newest eligible** candidates. In dry-run mode it only logs those decisions. In live mode, it deletes candidates one at a time through the X UI.
 
 It never deletes or undoes reposts of another account, skips unknown Like counts, and rejects ambiguous status URLs and nested quoted-post controls.
 
@@ -35,6 +35,7 @@ DevTools must remain open. Reloading or closing the tab stops the script.
 ```js
 const CONFIG = {
   HANDLE: '',
+  MAX_POSTS_TO_DELETE: 20,
   MIN_LIKES_TO_KEEP: 20,
   DRY_RUN: true,
   SPEED_MODE: 'fast',
@@ -46,7 +47,7 @@ const CONFIG = {
 
 `HANDLE` is optional and has no `@`. When empty, detection only succeeds on an unambiguous profile URL such as `/your_handle` or `/your_handle/with_replies`; otherwise the script stops rather than guessing. `MIN_LIKES_TO_KEEP: 20` means 0–19 are candidates and 20+ are kept. It must be a non-negative integer.
 
-`DRY_RUN` prevents all deletion UI clicks. Set it to `false` only after a reviewed dry run; the browser will present a final irreversible-action confirmation. `SPEED_MODE` is `safe`, `fast` (default), or `turbo`. All modes keep the same safety checks; they only tune DOM wait and scroll fallback timing. `MAX_EMPTY_SCROLLS` limits consecutive scans without newly found owned posts. `PERSIST_PROGRESS` stores only processed post IDs in this browser's local storage. `LOG_LEVEL` is `minimal`, `normal`, or `verbose`.
+`MAX_POSTS_TO_DELETE` is the maximum number of newest eligible posts to process, from 1 through 1000. Its default of 20 means the cleaner stops after it has found 20 candidates meeting the Like rule; it does not continue to older eligible posts. `DRY_RUN` prevents all deletion UI clicks. Set it to `false` only after a reviewed dry run; the browser will present a final irreversible-action confirmation. `SPEED_MODE` is `safe`, `fast` (default), or `turbo`. All modes keep the same safety checks; they only tune DOM wait and scroll fallback timing. `MAX_EMPTY_SCROLLS` limits consecutive scans without newly found owned posts. `PERSIST_PROGRESS` stores only processed post IDs in this browser's local storage. `LOG_LEVEL` is `minimal`, `normal`, or `verbose`.
 
 ## Dry run, then real deletion
 

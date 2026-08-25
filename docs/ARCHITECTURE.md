@@ -4,6 +4,6 @@ The single deployable snippet runs only in the current `x.com` tab. It uses no A
 
 For each rendered timeline article it finds the article's timestamp-bearing canonical status URL and requires `/resolved-handle/status/numeric-id`. It rejects ambiguity. It then obtains only the direct Like control owned by that outer article; nested tweet articles are excluded. Unknown counts are skipped, not considered zero.
 
-The loop is sequential. A live deletion opens one menu, identifies a localized Delete item, waits for the X confirmation control, confirms, and waits for DOM removal. Any ambiguous or unverifiable stage becomes an error and is never retried destructively. Mutation observation drives waits; speed profiles only tune timeouts and scrolling fallback.
+The loop is sequential and reads the timeline from newest to oldest. `MAX_POSTS_TO_DELETE` caps it at 1–1000 eligible candidates (20 by default), so it stops before scanning older eligible posts once the cap is reached. A live deletion opens one menu, identifies a localized Delete item, waits for the X confirmation control, confirms, and waits for DOM removal. Any ambiguous or unverifiable stage becomes an error and is never retried destructively. Mutation observation drives waits; speed profiles only tune timeouts and scrolling fallback.
 
 Processed IDs are held in memory and may optionally be stored in local browser storage. No post text, credentials, cookies, or information leaves the page.

@@ -8,6 +8,7 @@
 // ── CONFIG ──────────────────────────────────────────────────────────────────
 const CONFIG = {
   HANDLE: '', // Optional, without @. Empty safely detects it from the current profile URL.
+  MAX_POSTS_TO_DELETE: 20, // Process at most this many newest eligible posts (1–1000).
   MIN_LIKES_TO_KEEP: 20,
   DRY_RUN: true, // Keep true for the first run. false makes irreversible deletions.
   SPEED_MODE: 'fast', // 'safe', 'fast', or 'turbo'
@@ -73,6 +74,10 @@ const CONFIG = {
     }
     if (CONFIG.HANDLE && !/^[A-Za-z0-9_]{1,15}$/.test(normalizeHandle(CONFIG.HANDLE))) {
       throw new Error('HANDLE must be a conservative X username (1–15 letters, digits, or underscores).');
+    }
+    if (!Number.isFinite(CONFIG.MAX_POSTS_TO_DELETE) || !Number.isInteger(CONFIG.MAX_POSTS_TO_DELETE) ||
+        CONFIG.MAX_POSTS_TO_DELETE < 1 || CONFIG.MAX_POSTS_TO_DELETE > 1000) {
+      throw new Error('MAX_POSTS_TO_DELETE must be an integer from 1 through 1000.');
     }
     if (!Object.hasOwn(SPEEDS, CONFIG.SPEED_MODE)) throw new Error("SPEED_MODE must be 'safe', 'fast', or 'turbo'.");
     if (!Number.isFinite(CONFIG.MAX_EMPTY_SCROLLS) || !Number.isInteger(CONFIG.MAX_EMPTY_SCROLLS) || CONFIG.MAX_EMPTY_SCROLLS < 1) {
@@ -235,24 +240,28 @@ const CONFIG = {
     state.handle = resolveHandle();
     if (!state.handle) throw new Error('Could not safely detect an account. Set CONFIG.HANDLE and open that profile or its /with_replies view.');
     state.running = true; state.startedAt = Date.now(); loadProgress();
-    console.log(`[X Post Cleaner v${VERSION}] account=@${state.handle}, keep ≥${CONFIG.MIN_LIKES_TO_KEEP} likes, ${CONFIG.DRY_RUN ? 'DRY RUN' : 'LIVE DELETE'}, ${CONFIG.SPEED_MODE}. Stop: stopXCleaner()`);
-    if (!CONFIG.DRY_RUN && !window.confirm(`IRREVERSIBLE: delete your own @${state.handle} posts with fewer than ${CONFIG.MIN_LIKES_TO_KEEP} likes?\n\nClick Cancel to stop.`)) {
+    console.log(`[X Post Cleaner v${VERSION}] account=@${state.handle}, newest eligible limit=${CONFIG.MAX_POSTS_TO_DELETE}, keep ≥${CONFIG.MIN_LIKES_TO_KEEP} likes, ${CONFIG.DRY_RUN ? 'DRY RUN' : 'LIVE DELETE'}, ${CONFIG.SPEED_MODE}. Stop: stopXCleaner()`);
+    if (!CONFIG.DRY_RUN && !window.confirm(`IRREVERSIBLE: delete up to the ${CONFIG.MAX_POSTS_TO_DELETE} newest eligible @${state.handle} posts with fewer than ${CONFIG.MIN_LIKES_TO_KEEP} likes?\n\nClick Cancel to stop.`)) {
       throw new Error('Live deletion was cancelled.');
     }
     const escapeHandler = (event) => { if (event.key === 'Escape' && !document.querySelector('[role="dialog"]')) window.stopXCleaner(); };
     document.addEventListener('keydown', escapeHandler);
     let emptyScrolls = 0;
-    while (!state.stopped && emptyScrolls < CONFIG.MAX_EMPTY_SCROLLS) {
+    while (!state.stopped && state.counts.candidates < CONFIG.MAX_POSTS_TO_DELETE && emptyScrolls < CONFIG.MAX_EMPTY_SCROLLS) {
       let found = 0;
       for (const article of [...document.querySelectorAll(ARTICLE)]) {
-        if (state.stopped) break;
+        if (state.stopped || state.counts.candidates >= CONFIG.MAX_POSTS_TO_DELETE) break;
         try { if (await inspectArticle(article)) found += 1; }
         catch (error) { state.counts.errors += 1; console.error('[ERROR] Safe article inspection failed:', error); }
       }
       emptyScrolls = found ? 0 : emptyScrolls + 1;
-      if (!state.stopped && emptyScrolls < CONFIG.MAX_EMPTY_SCROLLS) await waitForTimelineChange();
+      if (!state.stopped && state.counts.candidates < CONFIG.MAX_POSTS_TO_DELETE && emptyScrolls < CONFIG.MAX_EMPTY_SCROLLS) {
+        await waitForTimelineChange();
+      }
     }
-    console.log(state.stopped ? '[X Post Cleaner] Stopped by user.' : `[X Post Cleaner] Finished after ${emptyScrolls} empty scroll cycles.`);
+    console.log(state.stopped ? '[X Post Cleaner] Stopped by user.' : state.counts.candidates >= CONFIG.MAX_POSTS_TO_DELETE
+      ? `[X Post Cleaner] Reached the configured limit of ${CONFIG.MAX_POSTS_TO_DELETE} newest eligible posts.`
+      : `[X Post Cleaner] Finished after ${emptyScrolls} empty scroll cycles.`);
     document.removeEventListener('keydown', escapeHandler);
   } catch (error) {
     console.error(`[X Post Cleaner] Did not start: ${error.message}`);

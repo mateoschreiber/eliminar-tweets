@@ -8,7 +8,7 @@ Un Snippet gratuito, local y sin dependencias para DevTools que revisa y elimina
 
 ## Qué hace
 
-En la cronología de **Posts** o **Respuestas** de tu cuenta, el snippet examina publicaciones de la cuenta seleccionada. Con el umbral predeterminado de 20, conserva las que tienen **20 o más** Likes y marca como candidatas a borrar las que tienen **0–19**. En modo simulación sólo registra la decisión; en modo real borra candidatas una por una mediante la interfaz de X.
+En la cronología de **Posts** o **Respuestas** de tu cuenta, el snippet examina publicaciones de la cuenta seleccionada desde la más reciente hacia la más antigua. Con el umbral predeterminado de 20, conserva las que tienen **20 o más** Likes y marca como candidatas a borrar las que tienen **0–19**. De forma predeterminada procesa sólo las **20 candidatas elegibles más recientes**. En modo simulación sólo registra la decisión; en modo real borra candidatas una por una mediante la interfaz de X.
 
 No borra ni deshace reposts de otras personas. Omite recuentos de Likes desconocidos y rechaza URLs de estado ambiguas o controles pertenecientes a posts citados anidados.
 
@@ -35,6 +35,7 @@ DevTools debe permanecer abierto. Recargar o cerrar la pestaña detiene el scrip
 ```js
 const CONFIG = {
   HANDLE: '',
+  MAX_POSTS_TO_DELETE: 20,
   MIN_LIKES_TO_KEEP: 20,
   DRY_RUN: true,
   SPEED_MODE: 'fast',
@@ -46,7 +47,7 @@ const CONFIG = {
 
 `HANDLE` es opcional y no lleva `@`. Si está vacío, la detección sólo funciona en una URL de perfil inequívoca como `/tu_handle` o `/tu_handle/with_replies`; si no, el script se detiene en vez de adivinar. `MIN_LIKES_TO_KEEP: 20` significa que 0–19 son candidatos y 20+ se conservan. Debe ser un entero no negativo.
 
-`DRY_RUN` impide todos los clics de borrado. Cambia a `false` sólo después de revisar una simulación; el navegador mostrará una confirmación final por acción irreversible. `SPEED_MODE` puede ser `safe`, `fast` (predeterminado) o `turbo`; todos conservan las mismas validaciones de seguridad y sólo cambian esperas y desplazamiento de respaldo. `MAX_EMPTY_SCROLLS` limita ciclos consecutivos sin posts propios nuevos. `PERSIST_PROGRESS` guarda únicamente IDs procesados en el almacenamiento local de este navegador. `LOG_LEVEL` puede ser `minimal`, `normal` o `verbose`.
+`MAX_POSTS_TO_DELETE` es el máximo de posts elegibles más recientes que se procesarán y acepta de 1 a 1000. Su valor predeterminado de 20 hace que el limpiador se detenga tras encontrar 20 candidatos que cumplen la regla de Likes; no continúa con candidatos más antiguos. `DRY_RUN` impide todos los clics de borrado. Cambia a `false` sólo después de revisar una simulación; el navegador mostrará una confirmación final por acción irreversible. `SPEED_MODE` puede ser `safe`, `fast` (predeterminado) o `turbo`; todos conservan las mismas validaciones de seguridad y sólo cambian esperas y desplazamiento de respaldo. `MAX_EMPTY_SCROLLS` limita ciclos consecutivos sin posts propios nuevos. `PERSIST_PROGRESS` guarda únicamente IDs procesados en el almacenamiento local de este navegador. `LOG_LEVEL` puede ser `minimal`, `normal` o `verbose`.
 
 ## Simulación y borrado real
 
