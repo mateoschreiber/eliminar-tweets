@@ -165,6 +165,29 @@ const CONFIG = {
       DELETE_LABELS.has((item.innerText || item.textContent || '').trim().toLocaleLowerCase()));
   }
 
+  function isVisibleAndEnabled(element) {
+    if (!element || element.disabled || element.getAttribute('aria-hidden') === 'true') return false;
+    return element.getClientRects().length > 0;
+  }
+
+  function confirmationDeleteButton() {
+    // X commonly provides this stable test ID. Do not require a particular parent:
+    // its confirmation-sheet wrapper differs between X UI variants and locales.
+    const stableButton = [...document.querySelectorAll(CONFIRM)].find(isVisibleAndEnabled);
+    if (stableButton) return stableButton;
+
+    // Safe localized fallback: only accept a visible destructive label inside a
+    // visible modal. It will never search the page-wide overflow menu.
+    const dialogs = [...document.querySelectorAll('[role="dialog"], [aria-modal="true"], [data-testid="confirmationSheet"]')]
+      .filter(isVisibleAndEnabled);
+    for (const dialog of dialogs) {
+      const button = [...dialog.querySelectorAll('button, [role="button"]')].find((element) =>
+        isVisibleAndEnabled(element) && DELETE_LABELS.has((element.innerText || element.textContent || '').trim().toLocaleLowerCase()));
+      if (button) return button;
+    }
+    return null;
+  }
+
   async function deleteArticle(article, status) {
     const caret = getDirectControl(article, CARET);
     if (!caret) throw new Error('Post overflow menu not found or ambiguous');
@@ -172,10 +195,7 @@ const CONFIG = {
     const deleteItem = await waitFor(menuDeleteItem);
     if (!deleteItem) throw new Error('Delete menu item did not appear');
     deleteItem.click();
-    const confirm = await waitFor(() => {
-      const button = document.querySelector(CONFIRM);
-      return button && button.closest('[role="dialog"], [data-testid="confirmationSheet"]') ? button : null;
-    });
+    const confirm = await waitFor(confirmationDeleteButton);
     if (!confirm) throw new Error('Delete confirmation dialog did not appear');
     confirm.click();
     const gone = await waitFor(() => !article.isConnected || ![...document.querySelectorAll(ARTICLE)].some((node) => getStatusFromArticle(node, state.handle)?.id === status.id));

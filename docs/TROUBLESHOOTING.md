@@ -4,6 +4,10 @@
 
 Open exactly `https://x.com/your_handle` or `https://x.com/your_handle/with_replies`, or set `HANDLE` without `@`. It intentionally stops on ambiguous URLs.
 
+## X shows a deletion confirmation
+
+In live mode the snippet confirms the visible X deletion sheet automatically. Do not manually click the sheet while the snippet is running: it waits for the button and verifies that the post disappears before continuing. If it reports that no confirmation button appeared, stop it, return to `DRY_RUN=true`, and report the X UI language and console error.
+
 ## It skips posts or says the Like count is unknown
 
 Keep the first run dry. X may have changed its DOM or may not have rendered enough post metadata. Capture the browser version, X UI language, script version, and console error for a bug report. Never include cookies, tokens, or credentials.

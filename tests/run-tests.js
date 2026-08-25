@@ -38,6 +38,8 @@ assert.match(source, /if \(CONFIG\.DRY_RUN\)[\s\S]*?return true;[\s\S]*?await de
 assert.match(source, /MAX_POSTS_TO_DELETE: 20/, 'the newest-eligible cap must default to 20');
 assert.match(source, /CONFIG\.MAX_POSTS_TO_DELETE > 1000/, 'the cap must reject values above 1000');
 assert.match(source, /state\.counts\.candidates < CONFIG\.MAX_POSTS_TO_DELETE/, 'the loop must stop at the candidate cap');
+assert.match(source, /querySelectorAll\(CONFIRM\).*find\(isVisibleAndEnabled\)/s, 'a visible stable confirmation control must be clicked automatically');
+assert.match(source, /\[role="dialog"\].*\[aria-modal="true"\].*confirmationSheet/s, 'localized confirmation fallback must stay scoped to a modal');
 assert.match(source, /closest\(ARTICLE\) === article/, 'direct controls/status links must exclude nested tweet articles');
 assert.match(source, /state\.processedIds\.has\(status\.id\)/, 'duplicate IDs must be ignored');
 assert.match(source, /window\.stopXCleaner/, 'emergency stop API must exist');

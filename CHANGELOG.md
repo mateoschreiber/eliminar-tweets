@@ -5,6 +5,7 @@ All notable changes follow [Semantic Versioning](https://semver.org/).
 ## Unreleased
 
 - Add `MAX_POSTS_TO_DELETE`, limiting processing to the newest eligible posts (20 by default; maximum 1000).
+- Recognize and automatically confirm visible X deletion dialogs across UI wrapper variants, with a modal-scoped Spanish/English fallback.
 
 ## [1.0.0] - 2026-08-25
 
